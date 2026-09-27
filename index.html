@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AuraQuiz - Ultra Premium Public Edition</title>
+    <!-- Font Awesome Icons & Google Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Firebase App & Database Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #030712;
+            --card-bg: rgba(17, 24, 39, 0.75);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --card-border-glow: rgba(99, 102, 241, 0.4);
+            --text-primary: #f9fafb;
+            --text-secondary: #9ca3af;
+            --accent-btn: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            --accent-btn-hover: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            --accent-btn-text: #ffffff;
+            --accent-bg: rgba(99, 102, 241, 0.12);
+            --gold-accent: #f59e0b;
+            --nav-bg: rgba(3, 7, 18, 0.85);
+            --input-bg: rgba(31, 41, 55, 0.6);
+            --danger-color: #ef4444;
+            --edit-color: #3b82f6;
+            --glow-color: rgba(139, 92, 246, 0.15);
+        }
+
+        [data-theme="light"] {
+            --bg-color: #f8fafc;
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --card-border: rgba(0, 0, 0, 0.08);
+            --card-border-glow: rgba(99, 102, 241, 0.3);
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --accent-btn: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            --accent-btn-hover: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
+            --accent-btn-text: #ffffff;
+            --accent-bg: rgba(99, 102, 241, 0.08);
+            --gold-accent: #d97706;
+            --nav-bg: rgba(255, 255, 255, 0.85);
+            --input-bg: #f1f5f9;
+            --danger-color: #dc2626;
+            --edit-color: #2563eb;
+            --glow-color: rgba(99, 102, 241, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-image: radial-gradient(circle at 50% 0%, var(--glow-color) 0%, transparent 75%);
+        }
+
+        header {
+            width: 100%;
+            padding: 16px 24px;
+            background: var(--nav-bg);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--card-border);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .logo-icon-box {
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .icon-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            border: 1px solid var(--card-border);
+            background: var(--card-bg);
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(8px);
+        }
+
+        .icon-btn:hover { border-color: var(--card-border-glow); transform: translateY(-2px); }
+        .icon-btn:active { transform: scale(0.95); }
+
+        main {
+            flex: 1;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px 18px 100px 18px;
+        }
+
+        .page { display: none; }
+        .page.active { display: block; animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .page-title {
+            font-size: 22px;
+            font-weight: 800;
+            margin: 12px 0 20px 2px;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .category-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 18px 20px;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            width: 100%;
+            border: 1px solid var(--card-border);
+            transition: all 0.25s ease;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .category-card:hover {
+            border-color: var(--card-border-glow);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px var(--glow-color);
+        }
+
+        .cat-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .cat-icon-wrapper {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            background: var(--accent-bg);
+            border: 1px solid var(--card-border);
+            color: #8b5cf6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .cat-details h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .cat-details p {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .action-icon-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            border: 1px solid var(--card-border);
+            background: var(--input-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-edit { color: var(--edit-color); }
+        .btn-delete { color: var(--danger-color); }
+        .action-icon-btn:hover { transform: scale(1.08); }
+
+        /* Quiz Play Area */
+        .quiz-top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-weight: 700;
+            padding: 0 4px;
+        }
+
+        .timer-badge {
+            background: var(--accent-bg);
+            border: 1px solid var(--card-border);
+            color: var(--text-primary);
+            padding: 8px 18px;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 800;
+            font-size: 14px;
+        }
+
+        .question-box {
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 26px;
+            margin-bottom: 20px;
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(12px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+        }
+
+        .question-text {
+            font-size: 18px;
+            font-weight: 700;
+            line-height: 1.6;
+            margin-bottom: 24px;
+            color: var(--text-primary);
+        }
+
+        .options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option-card {
+            background: var(--input-bg);
+            border: 1px solid var(--card-border);
+            padding: 16px 20px;
+            border-radius: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            font-weight: 600;
+            font-size: 15px;
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+        }
+
+        .option-card:hover {
+            border-color: var(--card-border-glow);
+            background: var(--accent-bg);
+        }
+
+        .option-card.correct {
+            background: rgba(34, 197, 94, 0.15) !important;
+            border-color: #22c55e !important;
+            color: #4ade80 !important;
+        }
+
+        .option-card.wrong {
+            background: rgba(239, 68, 68, 0.15) !important;
+            border-color: #ef4444 !important;
+            color: #f87171 !important;
+        }
+
+        /* Forms & Inputs */
+        .auth-card {
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 32px 24px;
+            margin-top: 10px;
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(16px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .auth-title {
+            font-size: 22px;
+            font-weight: 800;
+            margin-bottom: 28px;
+            text-align: center;
+            letter-spacing: -0.5px;
+        }
+
+        .input-group { margin-bottom: 20px; }
+        .input-group label {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .form-input, .form-select {
+            width: 100%;
+            padding: 15px 18px;
+            border-radius: 14px;
+            border: 1px solid var(--card-border);
+            background: var(--input-bg);
+            color: var(--text-primary);
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus, .form-select:focus {
+            border-color: var(--card-border-glow);
+        }
+
+        .btn-gradient {
+            width: 100%;
+            padding: 16px;
+            border-radius: 14px;
+            border: none;
+            background: var(--accent-btn);
+            color: var(--accent-btn-text);
+            font-weight: 800;
+            font-size: 15px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 15px var(--glow-color);
+        }
+
+        .btn-gradient:hover {
+            background: var(--accent-btn-hover);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: transparent !important;
+            color: var(--text-primary) !important;
+            border: 1px solid var(--card-border) !important;
+            box-shadow: none !important;
+        }
+
+        .create-q-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 18px;
+            padding: 18px;
+            margin-bottom: 16px;
+        }
+
+        .create-q-card h4 {
+            color: var(--gold-accent);
+            margin-bottom: 12px;
+            font-size: 15px;
+        }
+
+        /* Leaderboard */
+        .lb-card {
+            background: var(--card-bg);
+            border-radius: 18px;
+            padding: 16px 20px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(12px);
+        }
+
+        .user-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid var(--card-border);
+            background: var(--input-bg);
+        }
+
+        /* Bottom Nav */
+        nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: var(--nav-bg);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 12px 0 16px 0;
+            z-index: 1000;
+            border-top: 1px solid var(--card-border);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
+        .nav-item {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            width: 20%;
+            transition: color 0.2s ease;
+        }
+
+        .nav-item.active {
+            color: #8b5cf6;
+        }
+
+        .nav-item i {
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">
+            <div class="logo-icon-box"><i class="fa-solid fa-crown"></i></div>
+            <span>AuraQuiz</span>
+        </div>
+        <div class="header-actions">
+            <button class="icon-btn" onclick="toggleLanguage()"><i class="fa-solid fa-language"></i></button>
+            <button class="icon-btn" onclick="toggleTheme()"><i class="fa-solid fa-moon" id="theme-icon"></i></button>
+        </div>
+    </header>
+
+    <main>
+        <!-- Auth Screen -->
+        <div id="page-auth" class="page active">
+            <div class="auth-card">
+                <h2 class="auth-title" id="txt-auth-head">সাইন আপ / লগইন</h2>
+                
+                <div id="signup-form">
+                    <div class="input-group">
+                        <label id="lbl-u1">ইউজারনেম</label>
+                        <input type="text" id="signup-user" class="form-input" placeholder="e.g. aura_king">
+                    </div>
+                    <div class="input-group">
+                        <label id="lbl-p1">পাসওয়ার্ড</label>
+                        <input type="password" id="signup-pass" class="form-input" placeholder="••••••••">
+                    </div>
+                    <button class="btn-gradient" type="button" onclick="registerUser()">সাইন আপ করুন</button>
+                    <p style="text-align: center; margin-top: 22px; font-size: 14px; color: var(--text-secondary);">
+                        <span id="txt-has-acc">অ্যাকাউন্ট আছে?</span> <a href="javascript:void(0)" onclick="toggleAuth(false)" style="color: #8b5cf6; font-weight:700; text-decoration:none;" id="lnk-login">লগইন</a>
+                    </p>
+                </div>
+
+                <div id="login-form" style="display: none;">
+                    <div class="input-group">
+                        <label id="lbl-u2">ইউজারনেম</label>
+                        <input type="text" id="login-user" class="form-input" placeholder="Username">
+                    </div>
+                    <div class="input-group">
+                        <label id="lbl-p2">পাসওয়ার্ড</label>
+                        <input type="password" id="login-pass" class="form-input" placeholder="••••••••">
+                    </div>
+                    <button class="btn-gradient" type="button" onclick="loginUser()">লগইন করুন</button>
+                    <p style="text-align: center; margin-top: 22px; font-size: 14px; color: var(--text-secondary);">
+                        <span id="txt-no-acc">অ্যাকাউন্ট নেই?</span> <a href="javascript:void(0)" onclick="toggleAuth(true)" style="color: #8b5cf6; font-weight:700; text-decoration:none;" id="lnk-signup">সাইন আপ</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Public Categories Screen -->
+        <div id="page-quiz" class="page">
+            <h2 class="page-title">
+                <span id="txt-select-cat">পাবলিক কুইজ ক্যাটাগরি</span>
+            </h2>
+            <div id="category-container"></div>
+        </div>
+
+        <!-- My Quizzes Screen -->
+        <div id="page-my-quizzes" class="page">
+            <h2 class="page-title">আমার কুইজসমূহ</h2>
+            <div id="my-quizzes-container"></div>
+        </div>
+
+        <!-- Create/Edit Quiz Screen -->
+        <div id="page-create-quiz" class="page">
+            <h2 class="page-title" id="create-quiz-title-head">নতুন কুইজ তৈরি করুন</h2>
+            <div class="auth-card">
+                <input type="hidden" id="editing-quiz-id" value="">
+                <div class="input-group">
+                    <label>ক্যাটাগরির নাম (Category Name)</label>
+                    <input type="text" id="create-cat-name" class="form-input" placeholder="যেমন: সাধারণ জ্ঞান / Science">
+                </div>
+                
+                <hr style="border-color: var(--card-border); margin: 20px 0;">
+
+                <div id="create-questions-container"></div>
+
+                <button class="btn-gradient" id="btn-submit-quiz" onclick="submitNewQuiz()">পাবলিক কুইজে পোস্ট করুন</button>
+            </div>
+        </div>
+
+        <!-- Active Quiz Screen -->
+        <div id="page-quiz-play" class="page">
+            <div class="quiz-top-bar">
+                <span id="q-counter">প্রশ্ন ১/২০</span>
+                <div class="timer-badge"><i class="fa-solid fa-stopwatch"></i> <span id="timer">20</span>s</div>
+                <span id="score-display">মার্কস: ০/২০</span>
+            </div>
+
+            <div class="question-box">
+                <div class="question-text" id="q-text">প্রশ্ন লোড হচ্ছে...</div>
+                <div class="options-grid" id="options-box"></div>
+            </div>
+        </div>
+
+        <!-- Global Leaderboard -->
+        <div id="page-leaderboard" class="page">
+            <h2 class="page-title">
+                <span id="txt-lb-head">টপার লিডারবোর্ড (মোট নম্বর)</span>
+                <button class="icon-btn" title="Reset All Scores" onclick="resetAllLeaderboardScores()"><i class="fa-solid fa-arrows-rotate"></i></button>
+            </h2>
+            <div id="lb-list"></div>
+        </div>
+
+        <!-- Profile Screen -->
+        <div id="page-profile" class="page">
+            <div class="auth-card" style="text-align: center;">
+                <div style="position: relative; width: 88px; height: 88px; margin: 0 auto 18px auto;">
+                    <img id="profile-img" src="" class="user-avatar" style="width:100%; height:100%;">
+                    <label for="img-upload" style="position: absolute; bottom:0; right:0; background:var(--accent-btn); color:#fff; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+                        <i class="fa-solid fa-camera" style="font-size:13px;"></i>
+                    </label>
+                    <input type="file" id="img-upload" style="display: none;" accept="image/*" onchange="uploadAvatar(event)">
+                </div>
+                
+                <h3 id="profile-total-score" style="margin-bottom:24px; color:var(--gold-accent); font-size: 18px; font-weight:800; letter-spacing:0.5px;">মোট অর্জিত মার্কস: ০</h3>
+
+                <div class="input-group" style="text-align: left;">
+                    <label id="lbl-edit-u">ইউজারনেম</label>
+                    <input type="text" id="edit-user" class="form-input" readonly style="opacity: 0.5; cursor: not-allowed;">
+                </div>
+                <div class="input-group" style="text-align: left;">
+                    <label id="lbl-edit-p">নতুন পাসওয়ার্ড</label>
+                    <input type="password" id="edit-pass" class="form-input" placeholder="New Password">
+                </div>
+                <button class="btn-gradient" onclick="updateProfile()" id="btn-save-prof">সেভ করুন</button>
+                <button class="btn-gradient btn-secondary" onclick="logout()" id="btn-logout">লগআউট</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Bottom Nav -->
+    <nav id="nav-bar" style="display: none;">
+        <button class="nav-item active" id="nav-btn-quiz" onclick="switchPage('quiz')">
+            <i class="fa-solid fa-globe"></i> <span id="lbl-nav-q">পাবলিক</span>
+        </button>
+        <button class="nav-item" id="nav-btn-my-quizzes" onclick="switchPage('my-quizzes')">
+            <i class="fa-solid fa-list-check"></i> <span>আমার কুইজ</span>
+        </button>
+        <button class="nav-item" id="nav-btn-create-quiz" onclick="resetCreateForm(); switchPage('create-quiz');">
+            <i class="fa-solid fa-plus-circle"></i> <span>তৈরি করুন</span>
+        </button>
+        <button class="nav-item" id="nav-btn-leaderboard" onclick="switchPage('leaderboard')">
+            <i class="fa-solid fa-trophy"></i> <span id="lbl-nav-l">লিডারবোর্ড</span>
+        </button>
+        <button class="nav-item" id="nav-btn-profile" onclick="switchPage('profile')">
+            <i class="fa-solid fa-user"></i> <span id="lbl-nav-p">প্রোফাইল</span>
+        </button>
+    </nav>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCoK0n-nqXdHOleKsDsm4M91z-901cV3XQ",
+            authDomain: "khelenge.firebaseapp.com",
+            databaseURL: "https://khelenge-default-rtdb.firebaseio.com",
+            projectId: "khelenge",
+            storageBucket: "khelenge.firebasestorage.app",
+            messagingSenderId: "357341843813",
+            appId: "1:357341843813:web:85f7e280cd4e4a63d7518c",
+            measurementId: "G-L8P75FJTSF"
+        };
+        
+        let db = null;
+        try {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.database();
+        } catch(e) {
+            console.error("Firebase init failed:", e);
+        }
+
+        let currentUser = null;
+        let currentLang = 'bn';
+        let currentTheme = 'dark';
+        let activeQuizQuestions = [];
+        let activeQuizId = null;
+        let qIndex = 0;
+        let currentQuizMarks = 0;
+        let timerVal = 20;
+        let timerInterval = null;
+
+        window.onload = function() {
+            checkAutoLogin();
+            generateCreateQuizFields();
+        };
+
+        function checkAutoLogin() {
+            const savedUser = localStorage.getItem('aura_quiz_user');
+            if (savedUser && db) {
+                db.ref('users/' + savedUser).once('value').then(snapshot => {
+                    if (snapshot.exists()) {
+                        currentUser = snapshot.val();
+                        if (!currentUser.completedCategories) {
+                            currentUser.completedCategories = {};
+                        }
+                        enterApp();
+                    } else {
+                        localStorage.removeItem('aura_quiz_user');
+                    }
+                }).catch(() => {});
+            }
+        }
+
+        function toggleAuth(showSignUp) {
+            document.getElementById('signup-form').style.display = showSignUp ? 'block' : 'none';
+            document.getElementById('login-form').style.display = showSignUp ? 'none' : 'block';
+        }
+
+        function registerUser() {
+            const u = document.getElementById('signup-user').value.trim().toLowerCase();
+            const p = document.getElementById('signup-pass').value.trim();
+
+            if (!u || !p) {
+                alert("ইউজারনেম এবং পাসওয়ার্ড উভয়ই পূরণ করুন!");
+                return;
+            }
+
+            if (!/^[a-z0-9_]+$/.test(u) || p.length < 4) {
+                alert("ইউজারনেমে শুধু ছোট হাতের বর্ণ/সংখ্যা এবং পাসওয়ার্ড অন্তত ৪ অক্ষরের হতে হবে!");
+                return;
+            }
+
+            if (!db) return;
+
+            db.ref('users/' + u).once('value').then(snapshot => {
+                if (snapshot.exists()) {
+                    alert("ইউজারনেমটি আগে থেকেই নেওয়া!");
+                } else {
+                    const userData = {
+                        username: u,
+                        password: p,
+                        totalScore: 0,
+                        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${u}`,
+                        completedCategories: {}
+                    };
+                    db.ref('users/' + u).set(userData).then(() => {
+                        alert("সাইন আপ সফল হয়েছে!");
+                        toggleAuth(false);
+                    });
+                }
+            });
+        }
+
+        function loginUser() {
+            const u = document.getElementById('login-user').value.trim().toLowerCase();
+            const p = document.getElementById('login-pass').value.trim();
+
+            if (!u || !p) {
+                alert("ইউজারনেম ও পাসওয়ার্ড দিন!");
+                return;
+            }
+
+            if (!db) return;
+
+            db.ref('users/' + u).once('value').then(snapshot => {
+                if (snapshot.exists() && snapshot.val().password === p) {
+                    currentUser = snapshot.val();
+                    if (!currentUser.completedCategories) {
+                        currentUser.completedCategories = {};
+                    }
+                    localStorage.setItem('aura_quiz_user', u);
+                    enterApp();
+                } else {
+                    alert("ইউজারনেম অথবা পাসওয়ার্ড ভুল!");
+                }
+            });
+        }
+
+        function logout() {
+            localStorage.removeItem('aura_quiz_user');
+            currentUser = null;
+            location.reload();
+        }
+
+        function enterApp() {
+            document.getElementById('nav-bar').style.display = 'flex';
+            switchPage('quiz');
+        }
+
+        /* RESET LEADERBOARD FUNCTION FOR PUBLIC LAUNCH */
+        function resetAllLeaderboardScores() {
+            if (confirm("আপনি কি সবার পয়েন্ট reset করে 0 করতে চান?")) {
+                if (!db) return;
+                db.ref('users').once('value').then(snapshot => {
+                    let updates = {};
+                    snapshot.forEach(child => {
+                        updates['users/' + child.key + '/totalScore'] = 0;
+                        updates['users/' + child.key + '/completedCategories'] = null;
+                    });
+                    db.ref().update(updates).then(() => {
+                        if (currentUser) {
+                            currentUser.totalScore = 0;
+                            currentUser.completedCategories = {};
+                        }
+                        alert("সবাইর স্কোর রিসেট করে ০ করা হয়েছে!");
+                        renderLeaderboard();
+                    });
+                });
+            }
+        }
+
+        function generateCreateQuizFields() {
+            const container = document.getElementById('create-questions-container');
+            container.innerHTML = '';
+            for (let i = 1; i <= 20; i++) {
+                container.innerHTML += `
+                    <div class="create-q-card" id="card-q-${i}">
+                        <h4>প্রশ্ন ${i}</h4>
+                        <div class="input-group">
+                            <input type="text" class="form-input q-title" placeholder="প্রশ্ন লিখুন">
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                            <input type="text" class="form-input q-opt0" placeholder="অপশন A">
+                            <input type="text" class="form-input q-opt1" placeholder="অপশন B">
+                            <input type="text" class="form-input q-opt2" placeholder="অপশন C">
+                            <input type="text" class="form-input q-opt3" placeholder="অপশন D">
+                        </div>
+                        <div class="input-group">
+                            <label>সঠিক উত্তর নির্বাচন করুন</label>
+                            <select class="form-select q-ans">
+                                <option value="0">অপশন A</option>
+                                <option value="1">অপশন B</option>
+                                <option value="2">অপশন C</option>
+                                <option value="3">অপশন D</option>
+                            </select>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function resetCreateForm() {
+            document.getElementById('editing-quiz-id').value = '';
+            document.getElementById('create-cat-name').value = '';
+            document.getElementById('create-quiz-title-head').innerText = 'নতুন কুইজ তৈরি করুন';
+            document.getElementById('btn-submit-quiz').innerText = 'পাবলিক কুইজে পোস্ট করুন';
+            
+            const cards = document.querySelectorAll('.create-q-card');
+            cards.forEach(card => {
+                card.querySelector('.q-title').value = '';
+                card.querySelector('.q-opt0').value = '';
+                card.querySelector('.q-opt1').value = '';
+                card.querySelector('.q-opt2').value = '';
+                card.querySelector('.q-opt3').value = '';
+                card.querySelector('.q-ans').value = '0';
+            });
+        }
+
+        function submitNewQuiz() {
+            const catName = document.getElementById('create-cat-name').value.trim();
+            const editQuizId = document.getElementById('editing-quiz-id').value;
+
+            if (!catName) {
+                alert("ক্যাটাগরির নাম দিন!");
+                return;
+            }
+
+            const cards = document.querySelectorAll('.create-q-card');
+            let questions = [];
+            let isValid = true;
+
+            cards.forEach((card, index) => {
+                const title = card.querySelector('.q-title').value.trim();
+                const opt0 = card.querySelector('.q-opt0').value.trim();
+                const opt1 = card.querySelector('.q-opt1').value.trim();
+                const opt2 = card.querySelector('.q-opt2').value.trim();
+                const opt3 = card.querySelector('.q-opt3').value.trim();
+                const ans = parseInt(card.querySelector('.q-ans').value);
+
+                if (!title || !opt0 || !opt1 || !opt2 || !opt3) {
+                    isValid = false;
+                }
+
+                questions.push({
+                    q: `${index + 1}. ${title}`,
+                    opts: [opt0, opt1, opt2, opt3],
+                    ans: ans
+                });
+            });
+
+            if (!isValid) {
+                alert("অনুগ্রহ করে ২০টি প্রশ্নের বিবরণ ও ৪টি করে অপশন সঠিকভাবে পূরণ করুন!");
+                return;
+            }
+
+            const quizId = editQuizId ? editQuizId : 'quiz_' + Date.now();
+            const quizData = {
+                id: quizId,
+                title: catName,
+                author: currentUser.username,
+                questions: questions
+            };
+
+            if (db) {
+                db.ref('public_quizzes/' + quizId).set(quizData).then(() => {
+                    alert(editQuizId ? "আপনার কুইজটি আপডেট করা হয়েছে!" : "আপনার কুইজটি সফলভাবে পাবলিশ হয়েছে!");
+                    resetCreateForm();
+                    switchPage('my-quizzes');
+                });
+            }
+        }
+
+        function renderCategories() {
+            const container = document.getElementById('category-container');
+            container.innerHTML = '<p style="text-align:center; padding:20px;">লোড হচ্ছে...</p>';
+
+            if (!db) return;
+
+            db.ref('public_quizzes').once('value').then(snapshot => {
+                container.innerHTML = '';
+                const completed = currentUser.completedCategories || {};
+                let availableCount = 0;
+
+                snapshot.forEach(child => {
+                    const quiz = child.val();
+                    if (completed[quiz.id]) {
+                        return;
+                    }
+
+                    availableCount++;
+                    const card = document.createElement('div');
+                    card.className = 'category-card';
+                    card.onclick = () => startPublicQuiz(quiz);
+
+                    card.innerHTML = `
+                        <div class="cat-info">
+                            <div class="cat-icon-wrapper"><i class="fa-solid fa-layer-group"></i></div>
+                            <div class="cat-details">
+                                <h3>${quiz.title}</h3>
+                                <p>বাই: ${quiz.author} • ২০ প্রশ্ন</p>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-chevron-right" style="color:var(--text-secondary);"></i>
+                    `;
+                    container.appendChild(card);
+                });
+
+                if (availableCount === 0) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 40px 20px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 20px;">
+                            <i class="fa-solid fa-circle-check" style="font-size: 48px; color: #22c55e; margin-bottom: 12px;"></i>
+                            <h3 style="font-size: 18px; font-weight: 800;">সব কুইজ সম্পন্ন হয়েছে!</h3>
+                            <p style="font-size: 13px; color: var(--text-secondary); margin-top: 5px;">নতুন কুইজ এলে এখানে দেখতে পাবেন।</p>
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        function renderMyQuizzes() {
+            const container = document.getElementById('my-quizzes-container');
+            container.innerHTML = '<p style="text-align:center; padding:20px;">লোড হচ্ছে...</p>';
+
+            if (!db || !currentUser) return;
+
+            db.ref('public_quizzes').orderByChild('author').equalTo(currentUser.username).once('value').then(snapshot => {
+                container.innerHTML = '';
+                let count = 0;
+
+                snapshot.forEach(child => {
+                    count++;
+                    const quiz = child.val();
+
+                    const card = document.createElement('div');
+                    card.className = 'category-card';
+
+                    card.innerHTML = `
+                        <div class="cat-info">
+                            <div class="cat-icon-wrapper"><i class="fa-solid fa-pen-to-square"></i></div>
+                            <div class="cat-details">
+                                <h3>${quiz.title}</h3>
+                                <p>২০ টি প্রশ্ন • তৈরি করেছেন: আপনি</p>
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <button class="action-icon-btn btn-edit" onclick="editQuiz('${quiz.id}')"><i class="fa-solid fa-pen"></i></button>
+                            <button class="action-icon-btn btn-delete" onclick="deleteQuiz('${quiz.id}')"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+
+                if (count === 0) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 40px 20px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 20px;">
+                            <i class="fa-solid fa-folder-open" style="font-size: 48px; color: var(--text-secondary); margin-bottom: 12px;"></i>
+                            <h3 style="font-size: 18px; font-weight: 800;">আপনার কোনো কুইজ নেই!</h3>
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        function editQuiz(quizId) {
+            if (!db) return;
+            db.ref('public_quizzes/' + quizId).once('value').then(snapshot => {
+                if (snapshot.exists()) {
+                    const quiz = snapshot.val();
+                    document.getElementById('editing-quiz-id').value = quiz.id;
+                    document.getElementById('create-cat-name').value = quiz.title;
+                    document.getElementById('create-quiz-title-head').innerText = 'কুইজ এডিট করুন';
+                    document.getElementById('btn-submit-quiz').innerText = 'কুইজ আপডেট করুন';
+
+                    const cards = document.querySelectorAll('.create-q-card');
+                    quiz.questions.forEach((qData, idx) => {
+                        if (cards[idx]) {
+                            let cleanTitle = qData.q.replace(/^\d+\.\s*/, '');
+                            cards[idx].querySelector('.q-title').value = cleanTitle;
+                            cards[idx].querySelector('.q-opt0').value = qData.opts[0] || '';
+                            cards[idx].querySelector('.q-opt1').value = qData.opts[1] || '';
+                            cards[idx].querySelector('.q-opt2').value = qData.opts[2] || '';
+                            cards[idx].querySelector('.q-opt3').value = qData.opts[3] || '';
+                            cards[idx].querySelector('.q-ans').value = qData.ans;
+                        }
+                    });
+
+                    switchPage('create-quiz');
+                }
+            });
+        }
+
+        function deleteQuiz(quizId) {
+            if (confirm("আপনি কি নিশ্চিত যে এই কুইজটি ডিলিট করতে চান?")) {
+                if (db) {
+                    db.ref('public_quizzes/' + quizId).remove().then(() => {
+                        alert("কুইজটি সফলভাবে ডিলিট হয়েছে!");
+                        renderMyQuizzes();
+                    });
+                }
+            }
+        }
+
+        function switchPage(page) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+            const targetPage = document.getElementById('page-' + page);
+            if (targetPage) targetPage.classList.add('active');
+
+            const targetBtn = document.getElementById('nav-btn-' + page);
+            if (targetBtn) targetBtn.classList.add('active');
+
+            if (page === 'quiz') renderCategories();
+            if (page === 'my-quizzes') renderMyQuizzes();
+            if (page === 'leaderboard') renderLeaderboard();
+            if (page === 'profile') loadProfileInfo();
+        }
+
+        function startPublicQuiz(quiz) {
+            activeQuizQuestions = quiz.questions;
+            activeQuizId = quiz.id;
+            qIndex = 0;
+            currentQuizMarks = 0;
+            switchPage('quiz-play');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            clearInterval(timerInterval);
+
+            if (qIndex >= activeQuizQuestions.length) {
+                finishQuiz();
+                return;
+            }
+
+            const currentQ = activeQuizQuestions[qIndex];
+            document.getElementById('q-counter').innerText = `প্রশ্ন ${qIndex + 1}/২০`;
+            document.getElementById('score-display').innerText = `মার্কস: ${currentQuizMarks}/২০`;
+            document.getElementById('q-text').innerText = currentQ.q;
+
+            const box = document.getElementById('options-box');
+            box.innerHTML = '';
+
+            currentQ.opts.forEach((opt, i) => {
+                const btn = document.createElement('div');
+                btn.className = 'option-card';
+                btn.innerHTML = `<span style="width:26px; height:26px; border-radius:50%; background:var(--accent-bg); border:1px solid var(--card-border); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800;">${String.fromCharCode(65+i)}</span> <span>${opt}</span>`;
+                btn.onclick = () => answer(i);
+                box.appendChild(btn);
+            });
+
+            timerVal = 20;
+            document.getElementById('timer').innerText = timerVal;
+            timerInterval = setInterval(() => {
+                timerVal--;
+                document.getElementById('timer').innerText = timerVal;
+                if (timerVal <= 0) {
+                    clearInterval(timerInterval);
+                    qIndex++;
+                    loadQuestion();
+                }
+            }, 1000);
+        }
+
+        function answer(selected) {
+            clearInterval(timerInterval);
+            const currentQ = activeQuizQuestions[qIndex];
+            const cards = document.querySelectorAll('.option-card');
+
+            cards.forEach(c => c.style.pointerEvents = 'none');
+
+            if (selected === currentQ.ans) {
+                cards[selected].classList.add('correct');
+                currentQuizMarks += 1;
+            } else {
+                cards[selected].classList.add('wrong');
+                cards[currentQ.ans].classList.add('correct');
+            }
+
+            setTimeout(() => {
+                qIndex++;
+                loadQuestion();
+            }, 1000);
+        }
+
+        function finishQuiz() {
+            alert(`কুইজ সম্পন্ন হয়েছে!\nপ্রাপ্ত নম্বর: ${currentQuizMarks}/২০`);
+            
+            const newTotalScore = (currentUser.totalScore || 0) + currentQuizMarks;
+            currentUser.totalScore = newTotalScore;
+
+            if (!currentUser.completedCategories) {
+                currentUser.completedCategories = {};
+            }
+            currentUser.completedCategories[activeQuizId] = true;
+            
+            if (db) {
+                db.ref('users/' + currentUser.username + '/totalScore').set(newTotalScore);
+                db.ref('users/' + currentUser.username + '/completedCategories/' + activeQuizId).set(true);
+            }
+            switchPage('quiz');
+        }
+
+        function renderLeaderboard() {
+            const list = document.getElementById('lb-list');
+            list.innerHTML = '<p style="text-align:center; padding:20px; color:var(--text-secondary);">লোড হচ্ছে...</p>';
+
+            if (!db) return;
+
+            db.ref('users').orderByChild('totalScore').limitToLast(20).once('value').then(snapshot => {
+                list.innerHTML = '';
+                let users = [];
+                snapshot.forEach(child => { users.push(child.val()); });
+                users.reverse();
+
+                users.forEach((u, rank) => {
+                    const card = document.createElement('div');
+                    card.className = 'lb-card';
+                    card.innerHTML = `
+                        <div style="display:flex; align-items:center; gap:14px;">
+                            <span style="font-weight:800; font-size:15px; width:24px; color:${rank===0?'var(--gold-accent)':rank===1?'#e4e4e7':rank===2?'#a1a1aa':'var(--text-secondary)'}">#${rank+1}</span>
+                            <img src="${u.avatar}" class="user-avatar">
+                            <span style="font-weight:700; font-size:15px;">${u.username}</span>
+                        </div>
+                        <span style="font-weight:800; color:var(--text-primary); font-size:14px;">${u.totalScore || 0} Marks</span>
+                    `;
+                    list.appendChild(card);
+                });
+            });
+        }
+
+        function loadProfileInfo() {
+            document.getElementById('edit-user').value = currentUser.username;
+            document.getElementById('edit-pass').value = currentUser.password;
+            document.getElementById('profile-img').src = currentUser.avatar;
+            document.getElementById('profile-total-score').innerText = `মোট অর্জিত মার্কস: ${currentUser.totalScore || 0}`;
+        }
+
+        function uploadAvatar(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    const base64 = evt.target.result;
+                    currentUser.avatar = base64;
+                    document.getElementById('profile-img').src = base64;
+                    if (db) {
+                        db.ref('users/' + currentUser.username + '/avatar').set(base64);
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function updateProfile() {
+            const newP = document.getElementById('edit-pass').value.trim();
+            if (newP.length < 4) {
+                alert("পাসওয়ার্ড অন্তত ৪ অক্ষরের হতে হবে!");
+                return;
+            }
+            currentUser.password = newP;
+            if (db) {
+                db.ref('users/' + currentUser.username + '/password').set(newP).then(() => {
+                    alert("পাসওয়ার্ড আপডেট হয়েছে!");
+                });
+            }
+        }
+
+        function toggleTheme() {
+            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', currentTheme);
+            document.getElementById('theme-icon').className = currentTheme === 'dark' ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
+        }
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'bn' ? 'en' : 'bn';
+            alert("ভাষা পরিবর্তন করা হয়েছে!");
+        }
+    </script>
+</body>
+</html>
